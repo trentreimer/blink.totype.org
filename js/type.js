@@ -312,7 +312,7 @@
 
     function cutText() {
         copyText();
-        document.getElementById('text').textContent = '';
+        setTimeout(() => { document.getElementById('text').textContent = ''; }, 0);
     }
 
     document.querySelectorAll('#settings .copy-text').forEach(e => {
