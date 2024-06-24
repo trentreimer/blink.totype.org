@@ -36,7 +36,11 @@ input[type="submit"] {
 
 /* Hide the preview video */
 #video {
-    display: none;
+    /*display: none;*/
+    position: fixed;
+    top: 0;
+    left: 0;
+    opacity: 0;
     user-select: none;
 }
 
