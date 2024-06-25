@@ -87,11 +87,12 @@ input[type="submit"] {
 }
 
 #text-row {
-    background: #000;
-    color: #f0f0f0;
-    /*background: #e0e0e0;
-    color: #000;*/
-    border: 1px solid #777;
+    /*background: #000;
+    color: #f0f0f0;*/
+    background: #e0e0e0;
+    color: #000;
+    border: 0px solid #777;
+    box-shadow: 0 0 5px #888 inset;
     border-radius: 5px;
 }
 
