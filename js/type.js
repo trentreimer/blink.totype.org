@@ -310,9 +310,13 @@
         navigator.clipboard.writeText(m.textContent.trim());
     }
 
+    function clearText() {
+        document.getElementById('text').textContent = '';
+    }
+
     function cutText() {
         copyText();
-        setTimeout(() => { document.getElementById('text').textContent = ''; }, 0);
+        clearText();
     }
 
     document.querySelectorAll('#settings .copy-text').forEach(e => {
@@ -320,7 +324,8 @@
     });
 
     document.querySelectorAll('#settings .cut-text').forEach(e => {
-        e.addEventListener('click', cutText);
+        //e.addEventListener('click', cutText);
+        e.addEventListener('click', clearText);
     });
     ///////////////////////////////////////////
 
@@ -448,10 +453,11 @@
                     } else {
                         m.textContent = text.replace(/.$/, '');
                     }
-                } else if (['_', '␣'].includes(c)) {
+                } else if (['_', '␣', 'Space'].includes(c)) {
                     m.textContent = text + ' ';
                 } else if (['Clear', 'Reset', 'Cut', 'Empty', 'NewMsg', '🗑'].includes(c)) {
-                    cutText();
+                    //cutText();
+                    clearText();
                 } else if (['↵'].includes(c)) {
                     m.textContent = text + "\n\n";
                 } else {
@@ -542,7 +548,8 @@
         if (action === 'stop') {
             stopEyeMsg();
         } else if (['empty', 'cut'].includes(action)) {
-            cutText();
+            //cutText();
+            clearText(); // Cutting to clipboard may fire a permissions prompt that the user cannot interact with
             startEyeMsg();
         } else { // The default action is 'resume'
             startEyeMsg();
