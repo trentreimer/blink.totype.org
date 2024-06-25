@@ -19,16 +19,16 @@
     <body>
 
         <div id="editor">
-            <pre id="text"></pre>
+            <div id="text-row"><pre id="text"></pre></div>
             <div id="keyboard" class="hidden"></div>
         </div>
 
         <div id="settings-row">
             <div id="settings">
                 <div>Speed <select class="interval"><option value="0.75">3/4</option><option value="1">1</option><option value="1.25">1.25</option><option value="1.5">1.5</option><option value="2">2</option><option value="2.5">2.5</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="10">10</option></select> seconds</div>
-                <div>Blink Hold <select class="blink-length"><option value="0.25">1/4</option><option value="0.333">1/3</option><option value="0.5">1/2</option><option value="0.75">3/4</option><option value="1">1</option><option value="1.5">1.5</option><option value="2">2</option><option value="5">5</option></select> seconds</div>
+                <div>Hold blink <select class="blink-length"><option value="0.25">1/4</option><option value="0.333">1/3</option><option value="0.5">1/2</option><option value="0.75">3/4</option><option value="1">1</option><option value="1.5">1.5</option><option value="2">2</option><option value="5">5</option></select> seconds</div>
                 <button class="copy-text">📋 Copy Text</button>
-                <button class="cut-text"><i class="fa fa-cut"></i> Cut Text</button>
+                <button class="cut-text"><i class="fa fa-cut"></i> Delete Text</button>
                 <button class="start-stop" data-action="stop"></button>
             </div>
         </div>
@@ -47,7 +47,7 @@
         </dialog>
 
         <dialog id="cut-dialog" class="eye-dialog">
-            <h2>Cut all text?</h2>
+            <h2>Delete all text?</h2>
 
             <div class="eye-dialog-options">
                 <span class="eye-dialog-option" data-action="cut">Yes</span>
