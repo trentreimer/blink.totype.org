@@ -16,10 +16,6 @@ html {
 }
 
 body {
-    /*background: #000;
-    color: #fff;*/
-    background: #fff;
-    color: #000;
     font-size: 1rem;
     margin: 0 auto;
     padding: 0;
@@ -56,6 +52,10 @@ input[type="submit"] {
     outline: none;
 }
 
+.eye-dialog {
+    margin-top: 0;
+}
+
 #message::backdrop,
 .eye-dialog::backdrop {
     background: #000;
@@ -71,17 +71,18 @@ input[type="submit"] {
     max-width: var(--max-width);
     margin: 0 auto;
     padding-top: 10px;
-    /*width: 100%;
-    height: 100%;*/
-    background: #e0e0e0;
-    background: transparent;
-    color: #000;
+    /*background: #e0e0e0;
+    color: #000;*/
     box-shadow: 0 0 5px #000 inset;
     box-shadow: none;
     border: none;
     font-family: 'DM Mono', monospace;
     font-size: 1.5rem;
     overflow: auto;
+}
+
+#text-row {
+    color: #eee;
 }
 
 .eye-msg-charsets {
@@ -121,28 +122,11 @@ input[type="submit"] {
     padding: 0.2em 0.35em;
 }
 
-.eye-msg-charsets div.highlight > span,
-.eye-msg-charsets span.highlight,
-.eye-dialog-option.highlight {
-    background: #404050;
-    color: #fff;
-}
 
 #keyboard div.highlight > span,
 #keyboard span.highlight,
 .eye-dialog-option.highlight {
-    background: #585858;
-    color: #fff;
-}
-
-
-body.blinking .eye-msg-charsets div.highlight > span,
-body.blinking .eye-msg-charsets span.highlight,
-body.blinking .eye-dialog-option.highlight {
-    background: #208050;
-    background: #e0e0e0;
-    color: #000;
-    background: green;
+    background: #404050;
     color: #fff;
 }
 
@@ -155,22 +139,6 @@ body.blinking .eye-dialog-option.highlight {
     color: #000;
     background: green;
     color: #fff;
-}
-
-
-.eye-msg-charsets span.highlight,
-.eye-dialog-option.highlight {
-    border-radius: 0.15em;
-}
-
-.eye-msg-charsets div.highlight > :first-child {
-    border-top-left-radius: 0.15em;
-    border-bottom-left-radius: 0.15em;
-}
-
-.eye-msg-charsets div.highlight > :last-child {
-    border-top-right-radius: 0.15em;
-    border-bottom-right-radius: 0.15em;
 }
 
 
@@ -211,24 +179,34 @@ body.blinking .eye-dialog-option.highlight {
     display: inline-block;
     color: transparent;
     content: '-';
-    border-left: 2px solid #555;
+    border-left: 2px solid #888;
 }
 
 #keyboard:not(.hidden) {
     font-family: 'DM Mono', monospace;
     font-size: 1.5rem;
-    padding: 10px;
+    margin: 10px;
+    /*padding: 10px;
     background: #135;
     color: #fff;
     background: #e0e0e0;
     color: #222;
     box-shadow: 0 0 5px #555;
-    margin: 10px;
-    border-radius: 10px;
+    border-radius: 10px;*/
     display: inline-flex;
     flex-wrap: wrap;
-    gap: 0 25px;
+    gap: 0 15px;
     align-items: flex-start;
+}
+
+#keyboard > * {
+    padding: 10px;
+    /*box-shadow: 0 0 10px #555;*/
+    border: 1px solid #555;
+    border-radius: 10px;
+    color: #f0f0f0;
+    /*background: #d0d0d0;
+    color: #222;*/
 }
 
 #settings-row {
