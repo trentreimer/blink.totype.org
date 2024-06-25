@@ -67,10 +67,10 @@ input[type="submit"] {
 }
 
 #editor {
-    width: 100%;
+    /*width: 100%;
     max-width: var(--max-width);
-    margin: 0 auto;
-    padding-top: 10px;
+    margin: 0 auto;*/
+    padding: 10px;
     /*background: #e0e0e0;
     color: #000;*/
     box-shadow: 0 0 5px #000 inset;
@@ -81,8 +81,18 @@ input[type="submit"] {
     overflow: auto;
 }
 
+#editor > * {
+    max-width: var(--max-width);
+    margin: 0 auto;
+}
+
 #text-row {
-    color: #eee;
+    background: #000;
+    color: #f0f0f0;
+    /*background: #e0e0e0;
+    color: #000;*/
+    border: 1px solid #777;
+    border-radius: 5px;
 }
 
 .eye-msg-charsets {
@@ -185,7 +195,7 @@ body.blinking .eye-dialog-option.highlight {
 #keyboard:not(.hidden) {
     font-family: 'DM Mono', monospace;
     font-size: 1.5rem;
-    margin: 10px;
+    margin: 10px 0;
     /*padding: 10px;
     background: #135;
     color: #fff;
@@ -200,10 +210,10 @@ body.blinking .eye-dialog-option.highlight {
 }
 
 #keyboard > * {
-    padding: 10px;
-    /*box-shadow: 0 0 10px #555;*/
-    border: 1px solid #555;
+    padding: 0px;
     border-radius: 10px;
+    /*box-shadow: 0 0 12px #99a;*/
+    /*border: 1px solid #555;*/
     color: #f0f0f0;
     /*background: #d0d0d0;
     color: #222;*/
@@ -273,14 +283,6 @@ button, input, select {
 #eye-msg-select.viewed {
     opacity: 1;
     color: green;
-}
-
-@media screen and (max-width: 12in) {
-    .eye-msg-charsets-parent {
-        text-align: left;
-        padding: 0;
-        border: none;
-    }
 }
 
 /**
