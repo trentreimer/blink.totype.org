@@ -222,7 +222,6 @@
         keyRotationNum = 0;
 
         keyboardCharsets.length = 0;
-        //for (const charset of keyboard) keyboardCharsets.push(charset);
 
         let html = '';
         const u = document.createElement('div');
@@ -329,6 +328,45 @@
     });
     ///////////////////////////////////////////
 
+    /////////////////////////////////////////////////////////////////////////////////
+    // Set the autocomplete library
+    // wordFile can be any text file containing words separated by newline characters
+    let autocompleteLibrary = {};
+
+    const setAutocompleteLibrary = async function(wordFile) {
+        autocompleteLibrary = {};
+        let fileContents;
+
+        try {
+            fileContents = await fetch(wordFile).then(response => response.text());
+        } catch (err) {
+            console.error(err);
+            autocompleteLibrary = {};
+            return;
+        }
+
+        if (fileContents) {
+            const lines = fileContents.split("\n");
+
+            for (const line of lines) {
+                const word = line.trim().toUpperCase().replaceAll('ʼ', '\'').replaceAll('’', '\'').replace(/[^\w|'|\-].*$/, '');
+
+                if (word.length > 1) {
+                    const firstLetter = word.charAt(0);
+
+                    if (!autocompleteLibrary[firstLetter]) {
+                        autocompleteLibrary[firstLetter] = [];
+                    }
+
+                    autocompleteLibrary[firstLetter].push(word);
+                }
+            }
+        }
+    }
+
+    setAutocompleteLibrary('autocomplete/words.en.txt');
+    /////////////////////////////////////////////////////////////////////////////////
+
     function startEyeMsg() {
         hideMessage();
         setUpEyeMsg();
@@ -371,11 +409,11 @@
 
         if (keysetIndex >= charsets.length) {
             keysetIndex = 0;
-        } /*else if (keysetIndex === charsets.length - 1 && keySelectMode === 'charset') { // In the last row go straight to the characters
+        } else if (keysetIndex === charsets.length - 1 && keySelectMode === 'charset') { // In the last row go straight to the characters
             keyIndex = 0;
             keyRotationNum = 0;
             keySelectMode = 'char';
-        }*/
+        }
 
         if (keySelectMode === 'charset') {
             charsets[keysetIndex].classList.add('highlight');
@@ -402,8 +440,11 @@
         }
     }
 
+    let lastSelectedValueIsWord = false;
+
     function selectEyeMsgValue() {
         if (eyeDialogOpen) {
+            lastSelectedValueIsWord = false;
             return selectEyeDialogValue();
         }
 
@@ -415,56 +456,128 @@
 
             const c = highlighted.getAttribute('data-character');
 
-            if (['Pause', '⏸', '⏯︎'].includes(c)) {
-                if (['Pause', '⏸', '⏯︎'].includes(c)) {
-                    highlighted.classList.add('highlight');
-                    eyeMsgPaused = true;
+            if (c) document.querySelectorAll('#keyboard .eye-msg-charset-group.autosuggest').forEach(e => e.remove());
 
-                    keySelectMode = 'charset';
-                    keysetIndex = 0;
-                }
+            if (['Pause', '⏸', '⏯︎'].includes(c)) {
+                lastSelectedValueIsWord = false;
+
+                highlighted.classList.add('highlight');
+                eyeMsgPaused = true;
+
+                keySelectMode = 'charset';
+                keysetIndex = 0;
 
                 return;
             } else if (['Stop', 'Done', '🛑'].includes(c)) {
+                lastSelectedValueIsWord = false;
                 //highlighted.classList.add('highlight');
 
                 // Fire the dialog
                 eyeDialog('stop-dialog');
                 return;
             } else if (['Clear', 'Reset', 'Cut', 'Empty', 'NewMsg', '🗑'].includes(c)) {
+                lastSelectedValueIsWord = false;
                 //eyeDialog('empty-dialog');
                 eyeDialog('cut-dialog');
                 return;
             }
 
-            if (keySelectMode === 'charset') {
+            if (!c && keySelectMode === 'charset') {
                 keySelectMode = 'char';
                 keyIndex = 0;
                 keysetIndex = keysetIndex - 1;
                 if (keysetIndex < 0) keysetIndex = document.querySelectorAll('.eye-msg-charset').length - 1;
-            } else { // Character select mode
+            } else if (c) { // Character select mode
                 const m = document.getElementById('text');
                 const scrollable = document.getElementById('editor');
                 const text = m.textContent;
 
                 if (['⌫', '«', '<'].includes(c)) {
+                    lastSelectedValueIsWord = false;
+
                     if (/\W$/.test(text)) {
                         m.textContent = text.replace(/\W$/, '');
                     } else {
                         m.textContent = text.replace(/.$/, '');
                     }
                 } else if (['_', '␣', 'Space'].includes(c)) {
+                    lastSelectedValueIsWord = false;
                     m.textContent = text + ' ';
                 } else if (['Clear', 'Reset', 'Cut', 'Empty', 'NewMsg', '🗑'].includes(c)) {
+                    lastSelectedValueIsWord = false;
                     //cutText();
                     clearText();
                 } else if (['↵'].includes(c)) {
+                    lastSelectedValueIsWord = false;
                     m.textContent = text + "\n\n";
                 } else {
-                    let newText = c;
-                    if (['.', '?', ',', '!'].includes(c)) newText += ' ';
+                    if (c.length > 1) { // This is an autocompletion selection
+                        lastSelectedValueIsWord = true;
 
-                    m.textContent = text + newText;
+                        let partWordLength = c.length;
+                        let wordMatch = false;
+
+                        while (partWordLength > 0) {
+                            const matchString = c.substring(0, partWordLength);
+
+                            if (text.substring(text.length - partWordLength) == matchString) {
+                                wordMatch = true;
+                                m.textContent = text + c.substring(partWordLength) + ' ';
+                                break;
+                            } else {
+                                partWordLength --;
+                            }
+                        }
+
+                        if (!wordMatch) {
+                            m.textContent = text + c + ' ';
+                        }
+                    } else {
+                        if (['.', '?', ',', '!', ':', ';'].includes(c)) {
+                            if (lastSelectedValueIsWord && text.substring(text.length - 1) == ' ') {
+                                // Automatically remove the trailing space
+                                m.textContent = text.substring(0, text.length - 1) + c + ' ';
+                            } else {
+                                m.textContent = text + c + ' ';
+                            }
+                        } else {
+                            const newText = text + c;
+                            m.textContent = newText;
+
+                            if (/[A-Z|']/.test(c)) { // Show suggestions
+                                const lastWord = newText.match(/[A-Z|']+$/);
+
+                                if (lastWord) {
+                                    //console.log(lastWord[0]);
+                                    const firstLetter = lastWord[0].charAt(0);
+                                    //console.log(firstLetter);
+                                    if (autocompleteLibrary[firstLetter]) {
+                                        const suggestions = [];
+
+                                        for (const suggestion of autocompleteLibrary[firstLetter]) {
+                                            if (suggestion.substring(0, lastWord[0].length) == lastWord && suggestions.length < 6) {
+                                                suggestions.push(suggestion);
+                                            }
+                                        }
+
+                                        if (suggestions.length > 0) {
+                                            let html = '<div class="eye-msg-charset-group autosuggest">';
+
+                                            for (const suggestion of suggestions) {
+                                                html += `<div class="eye-msg-charset autosuggest" data-character="${suggestion}"><span data-character="${suggestion}">${suggestion}</span></div>`;
+                                            }
+
+                                            html += '</div>';
+
+                                            document.querySelector('#keyboard').insertAdjacentHTML('beforeend', html);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        lastSelectedValueIsWord = false;
+                    }
                 }
 
                 //m.scrollTop = m.scrollHeight;
