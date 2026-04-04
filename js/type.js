@@ -1,14 +1,9 @@
-// Message area
-const message = document.querySelector('#message');
+import { settings, tw, initSettings, updateSetting } from './settings.js';
+import { showMessage, hideMessage } from './messages.js';
 
-function showMessage(html = null) {
-    if (html !== null) message.innerHTML = html;
-    message.showModal();
-};
+initSettings();
+console.log(settings);
 
-function hideMessage() {
-    message.close();
-};
 
 /////////////////////////////////////////////////////////////
 // You need a camera
@@ -59,15 +54,6 @@ tf.setBackend(tfBackend);
 console.log(`TensorFlow backend: ${tf.getBackend()}`);
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-///////////////////////////////////////////////////////////////
-// Set long blink length (milliseconds)
-let longBlinkTime = parseInt(localStorage.getItem('longBlinkTime')) >= 250 ? parseInt(localStorage.getItem('longBlinkTime')) : 250;
-///////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////
-// Set character pause for rotation based typing (milliseconds)
-let charRotationPause = parseInt(localStorage.getItem('charRotationPause')) >= 750 ? parseInt(localStorage.getItem('charRotationPause')) : 1500;
-///////////////////////////////////////////////////////////////
 
 const eyeAspectRatioThreshold = {default: 0.18};
 
@@ -162,7 +148,7 @@ let keySelectMode = 'charset';
 let keyRotationNum = 0;
 let eyeMsgPaused = false;
 
-const keyboard = [
+/*const keyboard = [
     [
         ['A', 'B', 'C', 'D', 'E', 'F'],
         ['G', 'H', 'I', 'J', 'K', 'L'],
@@ -171,7 +157,7 @@ const keyboard = [
         ['Y', 'Z', '?', '.', ',', '\'', '!'],
         ['_', '⌫', '↵', '<i class="fas fa-pause" data-character="Pause"></i>', '<i class="fas fa-cut" data-character="Cut"></i>', '🛑'],
     ],
-    /*[
+    [
         ['A', 'B', 'C', 'D', 'E', 'F'],
         ['G', 'H', 'I', 'J', 'K', 'L'],
         ['M', 'N', 'O', 'P', 'Q', 'R'],
@@ -182,8 +168,8 @@ const keyboard = [
         ['_', '+', '-', '=', '"', '\'', '@', '#', '&'],
         ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
         ['⌫', '↵', '<i class="fas fa-pause" data-character="Pause"></i>', '<i class="fas fa-trash" data-character="Cut"></i>', '🛑'],
-    ],*/
-];
+    ],
+];*/
 
 const keyboardCharsets = [];
 
@@ -225,11 +211,11 @@ function setUpEyeMsg(proceed = true) {
     let html = '';
     const u = document.createElement('div');
 
-    for (let i = 0; i < keyboard.length; i ++) {
+    for (let i = 0; i < settings.keyboard.length; i ++) {
         html += '<div class="eye-msg-charset-group">';
 
-        for (let ii = 0; ii < keyboard[i].length; ii ++) {
-            const charset = keyboard[i][ii];
+        for (let ii = 0; ii < settings.keyboard[i].length; ii ++) {
+            const charset = settings.keyboard[i][ii];
             keyboardCharsets.push(charset);
 
             html += '<div class="eye-msg-charset">';
@@ -253,31 +239,29 @@ function setUpEyeMsg(proceed = true) {
 
     if (proceed) {
         highlightInterval.setFunction(setEyeMsgFocus);
-        highlightInterval.setInterval(charRotationPause);
+        highlightInterval.setInterval(settings.charRotationPause);
         highlightInterval.start();
     }
 }
 
 ///////////////////////////////////////////
 // Menu listeners
-document.querySelector('#settings .interval').value = charRotationPause / 1000;
-document.querySelector('#settings .blink-length').value = (longBlinkTime / 1000);
+document.querySelector('#settings .interval').value = settings.charRotationPause / 1000;
+document.querySelector('#settings .blink-length').value = (settings.longBlinkTime / 1000);
 
 document.querySelector('#settings .interval').addEventListener('change', function() {
-    charRotationPause = this.value * 1000;
-    localStorage.setItem('charRotationPause', charRotationPause);
+    updateSetting('charRotationPause', this.value * 1000);
 
     // If the rotation is going make sure it uses the new setting.
     if (document.querySelector('#settings .start-stop[data-action="stop"]')) {
         startEyeMsg();
     } else {
-        highlightInterval.setInterval(charRotationPause);
+        highlightInterval.setInterval(settings.charRotationPause);
     }
 });
 
 document.querySelector('#settings .blink-length').addEventListener('change', function() {
-    longBlinkTime = this.value * 1000;
-    localStorage.setItem('longBlinkTime', longBlinkTime);
+    updateSetting('longBlinkTime', this.value * 1000);
 });
 
 document.querySelectorAll('#settings .quit').forEach(e => { e.addEventListener('click', function() {
@@ -326,45 +310,6 @@ document.querySelectorAll('#settings .cut-text').forEach(e => {
     e.addEventListener('click', clearText);
 });
 ///////////////////////////////////////////
-
-/////////////////////////////////////////////////////////////////////////////////
-// Set the autocomplete library
-// wordFile can be any text file containing words separated by newline characters
-let autocompleteLibrary = {};
-
-const setAutocompleteLibrary = async function(wordFile) {
-    autocompleteLibrary = {};
-    let fileContents;
-
-    try {
-        fileContents = await fetch(wordFile).then(response => response.text());
-    } catch (err) {
-        console.error(err);
-        autocompleteLibrary = {};
-        return;
-    }
-
-    if (fileContents) {
-        const lines = fileContents.split("\n");
-
-        for (const line of lines) {
-            const word = line.trim().toUpperCase().replaceAll('ʼ', '\'').replaceAll('’', '\'').replace(/[^\w|'|\-].*$/, '');
-
-            if (word.length > 1) {
-                const firstLetter = word.charAt(0);
-
-                if (!autocompleteLibrary[firstLetter]) {
-                    autocompleteLibrary[firstLetter] = [];
-                }
-
-                autocompleteLibrary[firstLetter].push(word);
-            }
-        }
-    }
-}
-
-setAutocompleteLibrary('autocomplete/words.en.txt');
-/////////////////////////////////////////////////////////////////////////////////
 
 function startEyeMsg() {
     hideMessage();
@@ -550,10 +495,10 @@ function selectEyeMsgValue() {
                                 //console.log(lastWord[0]);
                                 const firstLetter = lastWord[0].charAt(0);
                                 //console.log(firstLetter);
-                                if (autocompleteLibrary[firstLetter]) {
+                                if (settings.autocompleteLibrary[firstLetter]) {
                                     const suggestions = [];
 
-                                    for (const suggestion of autocompleteLibrary[firstLetter]) {
+                                    for (const suggestion of settings.autocompleteLibrary[firstLetter]) {
                                         if (suggestion.substring(0, lastWord[0].length) == lastWord && suggestions.length < 6) {
                                             suggestions.push(suggestion);
                                         }
@@ -589,7 +534,7 @@ function selectEyeMsgValue() {
     }
 
     highlightInterval.setFunction(setEyeMsgFocus);
-    highlightInterval.setInterval(charRotationPause);
+    highlightInterval.setInterval(settings.charRotationPause);
     highlightInterval.start();
 }
 
@@ -618,8 +563,8 @@ function eyeDialog(dialogId, readingTimeout = 1000, defaultAction = 'resume') {
 
         if (eyeDialogOptions.length > 0) {
             highlightInterval.setFunction(setEyeDialogFocus);
-            highlightInterval.setInterval(charRotationPause);
-            highlightInterval.start(charRotationPause + readingTimeout);
+            highlightInterval.setInterval(settings.charRotationPause);
+            highlightInterval.start(settings.charRotationPause + readingTimeout);
         }
     }
 
@@ -712,7 +657,7 @@ async function trackEyes(timestamp, num) {
                 if (!blinkStart) {
                     blinkStart = time;
                     //highlightInterval.pause();
-                } else if (time > blinkStart + longBlinkTime - 10) {
+                } else if (time > blinkStart + settings.longBlinkTime - 10) {
                     highlightInterval.stop();
                     document.body.classList.add('blinking');
                 }
@@ -720,8 +665,8 @@ async function trackEyes(timestamp, num) {
                 document.body.classList.remove('blinking');
 
                 const blinkTime = blinkStart ? (time - blinkStart) : 0;
-                blinkEvent.shortBlink = blinkStart && blinkTime < longBlinkTime;
-                blinkEvent.longBlink = blinkStart && blinkTime >= longBlinkTime;
+                blinkEvent.shortBlink = blinkStart && blinkTime < settings.longBlinkTime;
+                blinkEvent.longBlink = blinkStart && blinkTime >= settings.longBlinkTime;
                 blinkStart = null;
 
                 //if (highlightInterval.state == 'paused') highlightInterval.resume();
@@ -738,7 +683,7 @@ async function trackEyes(timestamp, num) {
                 document.querySelectorAll('#keyboard .highlight').forEach(e => { e.classList.remove('highlight'); });
 
                 highlightInterval.setFunction(setEyeMsgFocus);
-                highlightInterval.setInterval(charRotationPause);
+                highlightInterval.setInterval(settings.charRotationPause);
                 highlightInterval.start();
                 //return;
             } else {
