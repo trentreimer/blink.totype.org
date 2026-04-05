@@ -1,20 +1,29 @@
 import { languages } from './languages.js';
-import { settings } from './settings.js';
+import { settings, updateSetting, setUpEyeMsg, tw } from './settings.js';
 
 export async function setLanguage(lang) {
-    if (languages.includes(lang.toLowerCase())) {
-        settings.language = lang.toLowerCase();
-    } else if (lang.indexOf('-') > 0 && languages.includes(lang.substring(0, lang.indexOf('-')).toLowerCase())) {
-        settings.language = lang.substring(0, lang.indexOf('-')).toLowerCase();
+    const currentLanguage = typeof settings.language === 'string' ? settings.language : null;
+    let l = lang.toLowerCase();
+
+    if (languages.includes(l)) {
+        updateSetting('language', l);
+    } else if (l.indexOf('-') > 0 && languages.includes(l.substring(0, l.indexOf('-')))) {
+        l = l.substring(0, l.indexOf('-'));
+        updateSetting('language', l);
     } else {
-        setDefaultLanguage();
+        initLanguage();
+        return;
     }
 
     console.log(`language = ${settings.language}`);
 
     setAutocompleteLibrary();
     settings.keyboard = (await import(`../languages/${settings.language}/keyboard.js`)).keyboard;
-    console.log(keyboard);
+    console.log(settings.keyboard);
+
+    if (currentLanguage && l && currentLanguage !== 1) {
+        setUpEyeMsg(true);
+    }
 }
 
 export async function initLanguage() {

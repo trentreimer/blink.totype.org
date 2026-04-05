@@ -1,9 +1,8 @@
-import { settings, tw, initSettings, updateSetting } from './settings.js';
+import { settings, tw, initSettings, updateSetting, setUpEyeMsg, setEyeMsgFocus } from './settings.js';
+import { windowWidth, windowHeight, setEyeMsgTextBoxHeight } from './sizing.js';
 import { showMessage, hideMessage } from './messages.js';
 
-initSettings();
-console.log(settings);
-
+await initSettings();
 
 /////////////////////////////////////////////////////////////
 // You need a camera
@@ -55,13 +54,6 @@ console.log(`TensorFlow backend: ${tf.getBackend()}`);
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 
-const eyeAspectRatioThreshold = {default: 0.18};
-
-eyeAspectRatioThreshold.left = eyeAspectRatioThreshold.default;
-eyeAspectRatioThreshold.right = eyeAspectRatioThreshold.default;
-
-const eyes = {left: {minRatio: 100, maxRatio: null}, right: {minRatio: 100, maxRatio: null}};
-
 function euclideanDistance(a, b) {
     return Math.hypot(...Object.keys(a).map(i => b[i] - a[i]));
 }
@@ -75,11 +67,11 @@ function blinkCheck(face) {
 
     for (const side of ['left', 'right']) {
         ratio[side] = getEyeAspectRatio(face.annotations[`${side}EyeUpper0`], face.annotations[`${side}EyeLower0`]);
-        //if (eyes[side].minRatio > ratio[side]) eyes[side].minRatio = ratio[side];
+        //if (tw.eyes[side].minRatio > ratio[side]) tw.eyes[side].minRatio = ratio[side];
     }
 
     // Check if either eye is closed
-    return ratio.left <= eyeAspectRatioThreshold.left || ratio.right <= eyeAspectRatioThreshold.right;
+    return ratio.left <= tw.eyeAspectRatioThreshold.left || ratio.right <= tw.eyeAspectRatioThreshold.right;
 }
 
 const videoElm = document.createElement('video');
@@ -103,13 +95,7 @@ const faceModel = await faceLandmarksDetection.load(faceLandmarksDetection.Suppo
 
 hideMessage();
 
-let tracking = true; // Let functions know when eye tracking is active
-
-// Calibrate the eye aspect ratio threshold
-let calibrated = true; // Set to "true" to skip live calibration and just use the default threshold
-let eyeAspectRatioCalibrationInterval;
-
-if (calibrated) {
+if (tw.calibrated) {
     setTimeout(startEyeMsg, 0);
 } else {
     showMessage('Calibrating');
@@ -120,129 +106,27 @@ if (calibrated) {
         let adjusted = false;
 
         for (const side of ['left', 'right']) {
-            if (eyes[side].minRatio < 0.25) {
-                eyeAspectRatioThreshold[side] = eyes[side].minRatio + 0.08;
+            if (tw.eyes[side].minRatio < 0.25) {
+                tw.eyeAspectRatioThreshold[side] = tw.eyes[side].minRatio + 0.08;
                 adjusted = true;
 
-                eyes[side].minRatio = 100;
+                tw.eyes[side].minRatio = 100;
 
-                if (!calibrated) {
-                    calibrated = true;
+                if (!tw.calibrated) {
+                    tw.calibrated = true;
                     hideMessage();
                     startEyeMsg();
                 }
             }
         }
 
-        if (adjusted) console.log(`Threshold left: ${eyeAspectRatioThreshold.left}, right: ${eyeAspectRatioThreshold.right}`);
+        if (adjusted) console.log(`Threshold left: ${tw.eyeAspectRatioThreshold.left}, right: ${tw.eyeAspectRatioThreshold.right}`);
     }, 10000);
-}
-
-//////////////////////////////////////////////////////////////
-// Section based typing
-const highlightInterval = new IntervalTimer();
-
-let keysetIndex = 0;
-let keyIndex = 0;
-let keySelectMode = 'charset';
-let keyRotationNum = 0;
-let eyeMsgPaused = false;
-
-/*const keyboard = [
-    [
-        ['A', 'B', 'C', 'D', 'E', 'F'],
-        ['G', 'H', 'I', 'J', 'K', 'L'],
-        ['M', 'N', 'O', 'P', 'Q', 'R'],
-        ['S', 'T', 'U', 'V', 'W', 'X'],
-        ['Y', 'Z', '?', '.', ',', '\'', '!'],
-        ['_', '⌫', '↵', '<i class="fas fa-pause" data-character="Pause"></i>', '<i class="fas fa-cut" data-character="Cut"></i>', '🛑'],
-    ],
-    [
-        ['A', 'B', 'C', 'D', 'E', 'F'],
-        ['G', 'H', 'I', 'J', 'K', 'L'],
-        ['M', 'N', 'O', 'P', 'Q', 'R'],
-        ['S', 'T', 'U', 'V', 'W', 'X'],
-    ],
-    [
-        ['Y', 'Z', '.', '?', '!', ',', ':', ';'],
-        ['_', '+', '-', '=', '"', '\'', '@', '#', '&'],
-        ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
-        ['⌫', '↵', '<i class="fas fa-pause" data-character="Pause"></i>', '<i class="fas fa-trash" data-character="Cut"></i>', '🛑'],
-    ],
-];*/
-
-const keyboardCharsets = [];
-
-function windowHeight() {
-    //return safari ? document.body.getBoundingClientRect().height : window.innerHeight;
-    return window.innerHeight;
-}
-
-function windowWidth() {
-    return safari ? document.body.getBoundingClientRect().width : window.innerWidth;
-}
-
-// Hard-set the height so contents can scroll
-function setEyeMsgTextBoxHeight() {
-    const h = windowHeight() - document.getElementById('settings-row').getBoundingClientRect().height;
-
-    document.getElementById('editor').style.height = `${h}px`;
 }
 
 window.addEventListener('resize', function() {
     setEyeMsgTextBoxHeight();
 });
-
-//setTimeout(startEyeMsg, 0);
-
-function setUpEyeMsg(proceed = true) {
-    tracking = false;
-    highlightInterval.stop();
-
-    document.querySelector('#keyboard').classList.add('hidden');
-
-    keysetIndex = 0;
-    keyIndex = 0;
-    keySelectMode = 'charset';
-    keyRotationNum = 0;
-
-    keyboardCharsets.length = 0;
-
-    let html = '';
-    const u = document.createElement('div');
-
-    for (let i = 0; i < settings.keyboard.length; i ++) {
-        html += '<div class="eye-msg-charset-group">';
-
-        for (let ii = 0; ii < settings.keyboard[i].length; ii ++) {
-            const charset = settings.keyboard[i][ii];
-            keyboardCharsets.push(charset);
-
-            html += '<div class="eye-msg-charset">';
-            charset.forEach(val => {
-                u.innerHTML = val;
-                const e = u.firstChild;
-                html += '<span data-character="' + (typeof e.getAttribute === 'function' && e.getAttribute('data-character') ? e.getAttribute('data-character') : val) + '">' + val + '</span>';
-            });
-            html += '</div>';
-        }
-
-        html += '</div>';
-    }
-
-    document.querySelector('#keyboard').innerHTML = html;
-    u.remove();
-    document.querySelector('#keyboard').classList.remove('hidden');
-    //console.log(html);
-
-    setEyeMsgTextBoxHeight();
-
-    if (proceed) {
-        highlightInterval.setFunction(setEyeMsgFocus);
-        highlightInterval.setInterval(settings.charRotationPause);
-        highlightInterval.start();
-    }
-}
 
 ///////////////////////////////////////////
 // Menu listeners
@@ -256,7 +140,7 @@ document.querySelector('#settings .interval').addEventListener('change', functio
     if (document.querySelector('#settings .start-stop[data-action="stop"]')) {
         startEyeMsg();
     } else {
-        highlightInterval.setInterval(settings.charRotationPause);
+        tw.highlightInterval.setInterval(settings.charRotationPause);
     }
 });
 
@@ -313,29 +197,29 @@ document.querySelectorAll('#settings .cut-text').forEach(e => {
 
 function startEyeMsg() {
     hideMessage();
-    setUpEyeMsg();
-    eyeMsgPaused = false;
-    keysetIndex = 0;
-    keyIndex = 0;
-    keySelectMode = 'charset';
-    keyRotationNum = 0;
-    tracking = true;
+    setUpEyeMsg(true);
+    tw.eyeMsgPaused = false;
+    tw.keysetIndex = 0;
+    tw.keyIndex = 0;
+    tw.keySelectMode = 'charset';
+    tw.keyRotationNum = 0;
+    tw.tracking = true;
     trackEyes();
 
     document.querySelectorAll('#settings .start-stop').forEach(e => { e.setAttribute('data-action', 'stop'); });
 }
 
 function hideEyeMsg() {
-    highlightInterval.stop();
-    tracking = false;
+    tw.highlightInterval.stop();
+    tw.tracking = false;
     document.querySelectorAll('#eye-msg-background, #eye-msg-select').forEach(e => { e.remove(); });
 }
 
 function stopEyeMsg() {
     try {
-        eyeMsgPaused = true;
-        tracking = false;
-        highlightInterval.stop();
+        tw.eyeMsgPaused = true;
+        tw.tracking = false;
+        tw.highlightInterval.stop();
 
         document.querySelectorAll('#keyboard .highlight').forEach(ee => { ee.classList.remove('highlight'); });
         document.querySelectorAll('#settings .start-stop').forEach(e => { e.setAttribute('data-action', 'start'); });
@@ -346,43 +230,7 @@ function stopEyeMsg() {
     }
 }
 
-function setEyeMsgFocus() {
-    document.querySelectorAll('#keyboard .highlight').forEach(e => { e.classList.remove('highlight'); });
 
-    const charsets = document.querySelectorAll('.eye-msg-charset');
-
-    if (keysetIndex >= charsets.length) {
-        keysetIndex = 0;
-    } else if (keysetIndex === charsets.length - 1 && keySelectMode === 'charset') { // In the last row go straight to the characters
-        keyIndex = 0;
-        keyRotationNum = 0;
-        keySelectMode = 'char';
-    }
-
-    if (keySelectMode === 'charset') {
-        charsets[keysetIndex].classList.add('highlight');
-        keysetIndex ++;
-
-        keyIndex = 0;
-        keyRotationNum = 0;
-    } else { // character
-        const chars = charsets[keysetIndex].querySelectorAll('span');
-
-        if (keyIndex >= chars.length) {
-            keyIndex = 0;
-            keyRotationNum ++;
-
-            if (keyRotationNum > 0) { // Revert to row selection
-                keySelectMode = 'charset';
-                keysetIndex = 0;
-                return;
-            }
-        }
-
-        chars[keyIndex].classList.add('highlight');
-        keyIndex ++;
-    }
-}
 
 let lastSelectedValueIsWord = false;
 
@@ -396,7 +244,7 @@ function selectEyeMsgValue() {
 
     if (highlighted) {
         highlighted.classList.remove('highlight');
-        highlightInterval.stop();
+        tw.highlightInterval.stop();
 
         const c = highlighted.getAttribute('data-character');
 
@@ -406,10 +254,10 @@ function selectEyeMsgValue() {
             lastSelectedValueIsWord = false;
 
             highlighted.classList.add('highlight');
-            eyeMsgPaused = true;
+            tw.eyeMsgPaused = true;
 
-            keySelectMode = 'charset';
-            keysetIndex = 0;
+            tw.keySelectMode = 'charset';
+            tw.keysetIndex = 0;
 
             return;
         } else if (['Stop', 'Done', '🛑'].includes(c)) {
@@ -426,11 +274,11 @@ function selectEyeMsgValue() {
             return;
         }
 
-        if (!c && keySelectMode === 'charset') {
-            keySelectMode = 'char';
-            keyIndex = 0;
-            keysetIndex = keysetIndex - 1;
-            if (keysetIndex < 0) keysetIndex = document.querySelectorAll('.eye-msg-charset').length - 1;
+        if (!c && tw.keySelectMode === 'charset') {
+            tw.keySelectMode = 'char';
+            tw.keyIndex = 0;
+            tw.keysetIndex = tw.keysetIndex - 1;
+            if (tw.keysetIndex < 0) tw.keysetIndex = document.querySelectorAll('.eye-msg-charset').length - 1;
         } else if (c) { // Character select mode
             const m = document.getElementById('text');
             const scrollable = document.getElementById('editor');
@@ -527,15 +375,15 @@ function selectEyeMsgValue() {
             //m.scrollTop = m.scrollHeight;
             scrollable.scrollTop = scrollable.scrollHeight;
 
-            keySelectMode = 'charset';
-            keysetIndex = 0;
+            tw.keySelectMode = 'charset';
+            tw.keysetIndex = 0;
         }
 
     }
 
-    highlightInterval.setFunction(setEyeMsgFocus);
-    highlightInterval.setInterval(settings.charRotationPause);
-    highlightInterval.start();
+    tw.highlightInterval.setFunction(setEyeMsgFocus);
+    tw.highlightInterval.setInterval(settings.charRotationPause);
+    tw.highlightInterval.start();
 }
 
 ///////////////////////////////////////////////////////////////
@@ -551,7 +399,7 @@ function eyeDialog(dialogId, readingTimeout = 1000, defaultAction = 'resume') {
 
     if (d && !eyeDialogOpen) {
         eyeDialogOpen = true;
-        highlightInterval.stop();
+        tw.highlightInterval.stop();
         document.querySelectorAll('#keyboard .highlight').forEach(e => { e.classList.remove('highlight'); });
 
         eyeDialogOptions = d.querySelectorAll('.eye-dialog-option');
@@ -562,9 +410,9 @@ function eyeDialog(dialogId, readingTimeout = 1000, defaultAction = 'resume') {
         d.showModal();
 
         if (eyeDialogOptions.length > 0) {
-            highlightInterval.setFunction(setEyeDialogFocus);
-            highlightInterval.setInterval(settings.charRotationPause);
-            highlightInterval.start(settings.charRotationPause + readingTimeout);
+            tw.highlightInterval.setFunction(setEyeDialogFocus);
+            tw.highlightInterval.setInterval(settings.charRotationPause);
+            tw.highlightInterval.start(settings.charRotationPause + readingTimeout);
         }
     }
 
@@ -615,7 +463,7 @@ function eyeDialogAction(action = 'resume') {
 
 function closeEyeDialog() {
     eyeDialogOpen = false;
-    highlightInterval.stop();
+    tw.highlightInterval.stop();
 
     document.querySelectorAll('.eye-dialog[open]').forEach(e => {
         e.close();
@@ -648,7 +496,7 @@ async function trackEyes(timestamp, num) {
 
         const time = Date.now();
 
-        if (calibrated) {
+        if (tw.calibrated) {
             // Determine how long you blinked
             if (blinking) {
                 blinkEvent.shortBlink = false;
@@ -656,9 +504,9 @@ async function trackEyes(timestamp, num) {
 
                 if (!blinkStart) {
                     blinkStart = time;
-                    //highlightInterval.pause();
+                    //tw.highlightInterval.pause();
                 } else if (time > blinkStart + settings.longBlinkTime - 10) {
-                    highlightInterval.stop();
+                    tw.highlightInterval.stop();
                     document.body.classList.add('blinking');
                 }
             } else {
@@ -669,22 +517,22 @@ async function trackEyes(timestamp, num) {
                 blinkEvent.longBlink = blinkStart && blinkTime >= settings.longBlinkTime;
                 blinkStart = null;
 
-                //if (highlightInterval.state == 'paused') highlightInterval.resume();
-                if (!eyeMsgPaused && highlightInterval.state == 'stopped') highlightInterval.start();
+                //if (tw.highlightInterval.state == 'paused') tw.highlightInterval.resume();
+                if (!tw.eyeMsgPaused && tw.highlightInterval.state == 'stopped') tw.highlightInterval.start();
             }
         } else if (!blinking) {
             document.body.classList.remove('blinking');
         }
 
-        if (blinkEvent.longBlink && calibrated) {
-            if (eyeMsgPaused) {
-                eyeMsgPaused = false;
-                tracking = true;
+        if (blinkEvent.longBlink && tw.calibrated) {
+            if (tw.eyeMsgPaused) {
+                tw.eyeMsgPaused = false;
+                tw.tracking = true;
                 document.querySelectorAll('#keyboard .highlight').forEach(e => { e.classList.remove('highlight'); });
 
-                highlightInterval.setFunction(setEyeMsgFocus);
-                highlightInterval.setInterval(settings.charRotationPause);
-                highlightInterval.start();
+                tw.highlightInterval.setFunction(setEyeMsgFocus);
+                tw.highlightInterval.setInterval(settings.charRotationPause);
+                tw.highlightInterval.start();
                 //return;
             } else {
                 selectEyeMsgValue();
@@ -692,7 +540,7 @@ async function trackEyes(timestamp, num) {
         }
     }
 
-    if (tracking) {
+    if (tw.tracking) {
         //setTimeout(function() { requestAnimationFrame((timestamp) => { trackEyes(timestamp, trackEyesNum); }) }, 10);
         //requestAnimationFrame(function(timestamp) { trackEyes(timestamp, trackEyesNum); });
         requestAnimationFrame(trackEyes);
