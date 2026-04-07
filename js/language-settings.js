@@ -16,11 +16,17 @@ export async function setLanguage(lang) {
         return;
     }
 
-    console.log(`language = ${settings.language}`);
+    document.querySelector('#selected-language-stylesheet')?.setAttribute('href', `languages/${settings.language}/${settings.language}.css`);
+
+    settings.keyboard = (await import(`../languages/${settings.language}/keyboard.js`)).keyboard;
+    settings.translations = (await import(`../languages/${settings.language}/translations.js`)).translations;
+
+    document.querySelectorAll('.translate[data-translate]').forEach(e => {
+        const key = e.getAttribute('data-translate');
+        if (settings.translations[key]) e.textContent = settings.translations[key];
+    });
 
     setAutocompleteLibrary();
-    settings.keyboard = (await import(`../languages/${settings.language}/keyboard.js`)).keyboard;
-    console.log(settings.keyboard);
 
     if (currentLanguage && l && currentLanguage !== 1) {
         setUpEyeMsg(true);
