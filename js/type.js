@@ -17,7 +17,7 @@ if (cameras.length < 1) {
 /////////////////////////////////////////////////////////////
 
 
-showMessage('<span class="blink">Loading face reader...</span>');
+showMessage(settings.translations['loading-face-reader']);
 
 // Load the necessary TensorFlow machine learning components
 await import('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.18.0/dist/tf.min.js');
@@ -56,9 +56,6 @@ tf.setBackend(tfBackend);
 console.log(`TensorFlow backend: ${tf.getBackend()}`);
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
-
 tw.videoElm = document.createElement('video');
 tw.videoElm.id = 'video';
 document.body.appendChild(tw.videoElm);
@@ -82,7 +79,7 @@ hideMessage();
 if (tw.calibrated) {
     setTimeout(startEyeMsg, 0);
 } else {
-    showMessage('Calibrating');
+    showMessage(settings.translations['calibrating-face-reader']);
 
     trackEyes(); // Start the calibration
 
