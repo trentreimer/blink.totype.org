@@ -1,7 +1,7 @@
-#eye-msg-menu .start-stop[data-action="stop"]::after {
+#settings .start-stop[data-action="stop"]::after {
     content: 'Stop';
 }
 
-#eye-msg-menu .start-stop[data-action="start"]::after {
+#settings .start-stop[data-action="start"]::after {
     content: 'Restart';
 }
