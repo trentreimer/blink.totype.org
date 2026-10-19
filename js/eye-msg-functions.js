@@ -5,6 +5,39 @@ import { eyeDialog, selectEyeDialogValue } from './eye-dialogs.js';
 import { copyText, clearText, cutText } from './text-functions.js';
 import { trackEyes } from './eye-tracking.js';
 
+function recordCompletedWord(text) {
+    const engine = settings.suggestEngine;
+
+    if (engine) engine.recordWord(engine.wordAt(text, text.length));
+}
+
+const sentenceEndPunctuation = ['.', '!', '?'];
+
+function endsWithSentenceEnd(text) {
+    return sentenceEndPunctuation.includes(text.replace(/\s+$/, '').slice(-1));
+}
+
+function showSuggestions(suggestions) {
+    if (!suggestions || suggestions.length === 0) return;
+
+    let html = '<div class="eye-msg-charset-group autosuggest">';
+
+    for (const suggestion of suggestions) {
+        const word = suggestion.text.toUpperCase();
+        html += `<div class="eye-msg-charset autosuggest" data-character="${word}"><span data-character="${word}">${word}</span></div>`;
+    }
+
+    html += '</div>';
+
+    document.querySelector('#keyboard').insertAdjacentHTML('beforeend', html);
+}
+
+function showNextWords(text) {
+    if (endsWithSentenceEnd(text)) return;
+
+    showSuggestions(settings.suggestEngine?.nextWords(text));
+}
+
 export function setUpEyeMsg(proceed = true) {
     tw.tracking = false;
     tw.highlightInterval.stop();
@@ -188,12 +221,16 @@ export function selectEyeMsgValue() {
             } else if (['_', '␣', 'Space'].includes(c)) {
                 tw.lastSelectedValueIsWord = false;
                 m.textContent = text + ' ';
+
+                recordCompletedWord(text);
+                showNextWords(m.textContent);
             } else if (['Clear', 'Reset', 'Cut', 'Empty', 'NewMsg', '🗑'].includes(c)) {
                 tw.lastSelectedValueIsWord = false;
                 //cutText();
                 clearText();
             } else if (['↵'].includes(c)) {
                 tw.lastSelectedValueIsWord = false;
+                recordCompletedWord(text);
                 m.textContent = text + "\n\n";
             } else {
                 if (c.length > 1) { // This is an autocompletion selection
@@ -217,47 +254,29 @@ export function selectEyeMsgValue() {
                     if (!wordMatch) {
                         m.textContent = text + c + ' ';
                     }
+
+                    settings.suggestEngine?.recordWord(c);
+                    showNextWords(m.textContent);
                 } else {
                     if (['.', '?', ',', '!', ':', ';'].includes(c)) {
+                        let newText;
+
                         if (tw.lastSelectedValueIsWord && text.substring(text.length - 1) == ' ') {
                             // Automatically remove the trailing space
-                            m.textContent = text.substring(0, text.length - 1) + c + ' ';
+                            newText = text.substring(0, text.length - 1) + c + ' ';
                         } else {
-                            m.textContent = text + c + ' ';
+                            newText = text + c + ' ';
                         }
+
+                        recordCompletedWord(text);
+                        m.textContent = newText;
+                        showNextWords(newText);
                     } else {
                         const newText = text + c;
                         m.textContent = newText;
 
-                        if (/[A-Z|']/.test(c)) { // Show suggestions
-                            const lastWord = newText.match(/[A-Z|']+$/);
-
-                            if (lastWord) {
-                                //console.log(lastWord[0]);
-                                const firstLetter = lastWord[0].charAt(0);
-                                //console.log(firstLetter);
-                                if (settings.autocompleteLibrary[firstLetter]) {
-                                    const suggestions = [];
-
-                                    for (const suggestion of settings.autocompleteLibrary[firstLetter]) {
-                                        if (suggestion.substring(0, lastWord[0].length) == lastWord && suggestions.length < 6) {
-                                            suggestions.push(suggestion);
-                                        }
-                                    }
-
-                                    if (suggestions.length > 0) {
-                                        let html = '<div class="eye-msg-charset-group autosuggest">';
-
-                                        for (const suggestion of suggestions) {
-                                            html += `<div class="eye-msg-charset autosuggest" data-character="${suggestion}"><span data-character="${suggestion}">${suggestion}</span></div>`;
-                                        }
-
-                                        html += '</div>';
-
-                                        document.querySelector('#keyboard').insertAdjacentHTML('beforeend', html);
-                                    }
-                                }
-                            }
+                        if (/[A-Z|']/.test(c)) {
+                            showSuggestions(settings.suggestEngine?.suggestAt(newText, newText.length));
                         }
                     }
 

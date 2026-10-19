@@ -1,3 +1,4 @@
+import { SuggestEngine } from 'https://cdn.jsdelivr.net/gh/trentreimer/suggest-engine@v0.11.2/dist/suggest-engine.esm.js';
 import { languages } from './languages.js';
 import { settings, tw, updateSetting } from './settings.js';
 import { setUpEyeMsg } from './eye-msg-functions.js';
@@ -26,7 +27,7 @@ export async function setLanguage(lang) {
         if (settings.translations[key]) e.textContent = settings.translations[key];
     });
 
-    setAutocompleteLibrary();
+    setSuggestEngine();
 
     if (currentLanguage && l && currentLanguage !== 1) {
         setUpEyeMsg(true);
@@ -58,40 +59,14 @@ export async function initLanguage() {
     return true;
 }
 
-export async function setAutocompleteLibrary() {
-    settings.autocompleteLibrary = {};
-    // word files are just text files containing words separated by newline characters
-    const wordFile = `../languages/${settings.language}/autocomplete.txt`;
-    let fileContents;
+export function setSuggestEngine() {
+    settings.suggestEngine = new SuggestEngine({
+        language: settings.language,
+        maxSuggestions: 6,
+        userWords: { storagePrefix: 'blink.totype.org' },
+    });
 
-    try {
-        const response = await fetch(wordFile);
-
-        if (response.ok) {
-            fileContents = await response.text();
-        } else {
-            throw new Error(`Unable to fetch ${wordFile}`);
-        }
-    } catch (err) {
-        console.error(err);
-        return;
-    }
-
-    if (fileContents) {
-        const lines = fileContents.split("\n");
-
-        for (const line of lines) {
-            const word = line.trim().toUpperCase().replaceAll('ʼ', '\'').replaceAll('’', '\'').replace(/[^\w|'|\-].*$/, '');
-
-            if (word.length > 1) {
-                const firstLetter = word.charAt(0).toUpperCase();
-
-                if (!settings.autocompleteLibrary[firstLetter]) {
-                    settings.autocompleteLibrary[firstLetter] = [];
-                }
-
-                settings.autocompleteLibrary[firstLetter].push(word);
-            }
-        }
-    }
+    settings.suggestEngine.loadWordList()
+        .then(() => settings.suggestEngine.loadSuggestionContext())
+        .catch(err => console.error(err));
 }
