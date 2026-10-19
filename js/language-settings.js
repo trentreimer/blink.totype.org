@@ -1,4 +1,4 @@
-import { SuggestEngine } from 'https://cdn.jsdelivr.net/gh/trentreimer/suggest-engine@v0.11.2/dist/suggest-engine.esm.js';
+import { SuggestEngine } from 'https://cdn.jsdelivr.net/gh/trentreimer/suggest-engine@v0.11.4/dist/suggest-engine.esm.js';
 import { languages } from './languages.js';
 import { settings, tw, updateSetting } from './settings.js';
 import { setUpEyeMsg } from './eye-msg-functions.js';
