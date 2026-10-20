@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Custom icon: closed eye with lashes. -->
+  <rect width="32" height="32" rx="6" fill="#06c"/>
+  <g transform="translate(0 1)">
+    <path d="M6 14Q16 21 26 14M8 15.3 6.4 19.1M13.3 17.2 12.6 22.3M18.7 17.2 19.4 22.3M24 15.3 25.6 19.1" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>
