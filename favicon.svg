@@ -1,7 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
-  <!-- Custom icon: closed eye with lashes. -->
-  <rect width="32" height="32" rx="6" fill="#06c"/>
-  <g transform="translate(0 1)">
-    <path d="M6 14Q16 21 26 14M8 15.3 6.4 19.1M13.3 17.2 12.6 22.3M18.7 17.2 19.4 22.3M24 15.3 25.6 19.1" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+  <!--!Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+  <!-- Derived from face-smile-wink (solid); features cropped from the face circle and enlarged, the winking eye replaced with a straight line; recolored for blink.totype.org -->
+  <rect width="640" height="640" rx="120" fill="#06c"/>
+  <g transform="translate(325.4 350) scale(1.6) translate(-325.4 -350)">
+    <path fill="#fff" d="M229.4 385.9C249.8 413.9 282.8 432 320 432C357.2 432 390.2 413.9 410.6 385.9C418.4 375.2 433.4 372.8 444.1 380.6C454.8 388.4 457.2 403.4 449.4 414.1C420.3 454 373.2 480 320 480C266.8 480 219.7 454 190.6 414.1C182.8 403.4 185.2 388.4 195.9 380.6C206.6 372.8 221.6 375.2 229.4 385.9zM208 272C208 254.3 222.3 240 240 240C257.7 240 272 254.3 272 272C272 289.7 257.7 304 240 304C222.3 304 208 289.7 208 272z"/>
+    <rect x="332" y="252" width="136" height="40" rx="20" fill="#fff"/>
   </g>
 </svg>
