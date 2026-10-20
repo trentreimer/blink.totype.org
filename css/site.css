@@ -82,7 +82,8 @@ a {
     display: inline-block;
     padding: 5px 10px;
     margin-right: 10px;
-    background: blue;
+    /*background: blue;*/
+    background: #06c;
     color: #fff;
     font-weight: bold;
     border-radius: 10px;

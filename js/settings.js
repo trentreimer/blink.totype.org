@@ -11,7 +11,7 @@ export function storageKey(name) {
     return `${storagePrefix}:${name}`;
 }
 
-const localStorageSettings = ['longBlinkTime', 'charRotationPause'];
+const localStorageSettings = ['longBlinkTime', 'charRotationPause', 'language'];
 
 export async function initSettings() {
     // Values written before storage keys were namespaced are dropped so a
