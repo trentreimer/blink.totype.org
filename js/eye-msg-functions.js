@@ -8,13 +8,7 @@ import { trackEyes } from './eye-tracking.js';
 function recordCompletedWord(text) {
     const engine = settings.suggestEngine;
 
-    if (engine) engine.recordWord(engine.wordAt(text, text.length));
-}
-
-const sentenceEndPunctuation = ['.', '!', '?'];
-
-function endsWithSentenceEnd(text) {
-    return sentenceEndPunctuation.includes(text.replace(/\s+$/, '').slice(-1));
+    if (engine) engine.recordWordAt(text, text.length);
 }
 
 function showSuggestions(suggestions) {
@@ -33,8 +27,6 @@ function showSuggestions(suggestions) {
 }
 
 function showNextWords(text) {
-    if (endsWithSentenceEnd(text)) return;
-
     showSuggestions(settings.suggestEngine?.nextWords(text));
 }
 

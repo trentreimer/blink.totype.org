@@ -1,6 +1,6 @@
-import { SuggestEngine } from 'https://cdn.jsdelivr.net/gh/trentreimer/suggest-engine@v0.11.4/dist/suggest-engine.esm.js';
+import { SuggestEngine } from 'https://cdn.jsdelivr.net/gh/trentreimer/suggest-engine@v0.12.0/dist/suggest-engine.esm.js';
 import { languages } from './languages.js';
-import { settings, tw, updateSetting } from './settings.js';
+import { settings, tw, updateSetting, storageKey, storagePrefix } from './settings.js';
 import { setUpEyeMsg } from './eye-msg-functions.js';
 
 export async function setLanguage(lang) {
@@ -35,8 +35,10 @@ export async function setLanguage(lang) {
 }
 
 export async function initLanguage() {
-    if (localStorage.getItem('language') && languages.includes(localStorage.getItem('language'))) {
-        await setLanuage(localStorage.getItem('language'));
+    const stored = localStorage.getItem(storageKey('language'));
+
+    if (stored && languages.includes(stored)) {
+        await setLanguage(stored);
         return true;
     }
 
@@ -63,7 +65,7 @@ export function setSuggestEngine() {
     settings.suggestEngine = new SuggestEngine({
         language: settings.language,
         maxSuggestions: 6,
-        userWords: { storagePrefix: 'blink.totype.org' },
+        userWords: { storagePrefix },
     });
 
     settings.suggestEngine.loadWordList()

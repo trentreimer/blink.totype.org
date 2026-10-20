@@ -5,9 +5,26 @@ import { setUpEyeMsg } from './eye-msg-functions.js';
 export const settings = {};
 export const tw = {}; // Typewriter properties
 
+export const storagePrefix = 'blink.totype.org';
+
+export function storageKey(name) {
+    return `${storagePrefix}:${name}`;
+}
+
+const localStorageSettings = ['longBlinkTime', 'charRotationPause'];
+
 export async function initSettings() {
-    settings.longBlinkTime = parseInt(localStorage.getItem('longBlinkTime')) >= 250 ? parseInt(localStorage.getItem('longBlinkTime')) : 250;
-    settings.charRotationPause = parseInt(localStorage.getItem('charRotationPause')) >= 750 ? parseInt(localStorage.getItem('charRotationPause')) : 1500;
+    // Values written before storage keys were namespaced are dropped so a
+    // stale key from another page on this origin can never influence the app.
+    for (const key of ['longBlinkTime', 'charRotationPause', 'language']) {
+        localStorage.removeItem(key);
+    }
+
+    const longBlinkTime = parseInt(localStorage.getItem(storageKey('longBlinkTime')));
+    const charRotationPause = parseInt(localStorage.getItem(storageKey('charRotationPause')));
+
+    settings.longBlinkTime = longBlinkTime >= 250 ? longBlinkTime : 250;
+    settings.charRotationPause = charRotationPause >= 750 ? charRotationPause : 1500;
 
     tw.tracking = true; // Let functions know when eye tracking is active
     tw.eyes = {left: {minRatio: 100, maxRatio: null}, right: {minRatio: 100, maxRatio: null}};
@@ -36,9 +53,7 @@ export async function initSettings() {
 export function updateSetting(settingName, settingValue) {
     settings[settingName] = settingValue;
 
-    const localStorageSettings = ['longBlinkTime', 'charRotationPause'];
-
     if (localStorageSettings.includes(settingName)) {
-        localStorage.setItem(settingName, settingValue);
+        localStorage.setItem(storageKey(settingName), settingValue);
     }
 }
