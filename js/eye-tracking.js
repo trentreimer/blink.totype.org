@@ -6,6 +6,27 @@ let blinkStart;
 let blinkEvent = {shortBlink: false, longBlink: false};
 let trackEyesNum = 0;
 
+export function stopCamera() {
+    if (tw.videoElm && tw.videoElm.srcObject) {
+        tw.videoElm.srcObject.getTracks().forEach(track => { track.stop(); });
+    }
+}
+
+export async function startCamera() {
+    const liveTrack = tw.videoElm.srcObject && tw.videoElm.srcObject.getTracks().some(track => track.readyState === 'live');
+
+    if (liveTrack) return true;
+
+    try {
+        tw.videoElm.srcObject = await navigator.mediaDevices.getUserMedia({video: true});
+        await tw.videoElm.play();
+        return true;
+    } catch (err) {
+        console.error(err);
+        return false;
+    }
+}
+
 function euclideanDistance(a, b) {
     return Math.hypot(...Object.keys(a).map(i => b[i] - a[i]));
 }

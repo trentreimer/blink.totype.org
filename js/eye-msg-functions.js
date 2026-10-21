@@ -3,7 +3,7 @@ import { setEyeMsgTextBoxHeight } from './sizing.js';
 import { showMessage, hideMessage } from './messages.js';
 import { eyeDialog, selectEyeDialogValue } from './eye-dialogs.js';
 import { copyText, clearText, cutText } from './text-functions.js';
-import { trackEyes } from './eye-tracking.js';
+import { trackEyes, startCamera, stopCamera } from './eye-tracking.js';
 
 function recordCompletedWord(text) {
     const engine = settings.suggestEngine;
@@ -126,7 +126,10 @@ export function startEyeMsg() {
     tw.keySelectMode = 'charset';
     tw.keyRotationNum = 0;
     tw.tracking = true;
-    trackEyes();
+
+    startCamera().then(() => {
+        if (tw.tracking) trackEyes();
+    });
 
     document.querySelectorAll('#settings .start-stop').forEach(e => { e.setAttribute('data-action', 'stop'); });
 }
@@ -136,6 +139,7 @@ export function stopEyeMsg() {
         tw.eyeMsgPaused = true;
         tw.tracking = false;
         tw.highlightInterval.stop();
+        stopCamera();
 
         document.querySelectorAll('#keyboard .highlight').forEach(ee => { ee.classList.remove('highlight'); });
         document.querySelectorAll('#settings .start-stop').forEach(e => { e.setAttribute('data-action', 'start'); });

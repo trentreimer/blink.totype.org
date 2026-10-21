@@ -2,7 +2,7 @@ import { settings, tw, initSettings, updateSetting } from './settings.js';
 import { setEyeMsgTextBoxHeight } from './sizing.js';
 import { showMessage, hideMessage } from './messages.js';
 import { startEyeMsg, stopEyeMsg } from './eye-msg-functions.js';
-import { trackEyes } from './eye-tracking.js';
+import { trackEyes, startCamera } from './eye-tracking.js';
 import { copyText, clearText, cutText } from './text-functions.js';
 
 await initSettings();
@@ -60,17 +60,7 @@ tw.videoElm = document.createElement('video');
 tw.videoElm.id = 'video';
 document.body.appendChild(tw.videoElm);
 
-async function setVideoStream() {
-    try {
-        tw.videoElm.srcObject = await navigator.mediaDevices.getUserMedia({video: true});
-        tw.videoElm.play();
-    } catch (err) {
-        console.error(err);
-        return false;
-    }
-}
-
-await setVideoStream();
+await startCamera();
 
 tw.faceModel = await faceLandmarksDetection.load(faceLandmarksDetection.SupportedPackages.mediapipeFacemesh);
 
